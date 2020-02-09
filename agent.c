@@ -30,17 +30,14 @@ char* prepareBeacon(BEACON agent);
 
 int main(int argc, char *argv[])
 {
-  srand(time(NULL)); //seeding rand for every binary instance
-
   BEACON agent = constructBeacon();
   
   while(1)
   {
     sendUDP(agent);
-    printf("Agent Sent!\n");
+    printf("Agent Sent!\n\n");
     sleep(agent.timeInterval);
   }
-  printf("Agent Killed!\n");
 
   return 0;
 }
@@ -66,7 +63,7 @@ void sendUDP(BEACON agent)
   
   int bytes_sent  = 0;
   char *temp = prepareBeacon(agent);
-  bytes_sent = send(sockfd, (char *)temp, 28, 0);
+  bytes_sent = send(sockfd, (char *)temp, 26, 0);
   if(bytes_sent < 0) 
     printf("Error!\n");
   else
@@ -91,7 +88,7 @@ char* prepareBeacon(BEACON agent)
   char cmdPort[6];
   snprintf(cmdPort, 6, "%d", agent.cmdPort);
 
-  snprintf(buffer, 1024, "%s,%s,%s,%d.%d.%d.%d,%s\n", ID, 
+  snprintf(buffer, 26, "%s,%s,%s,%d.%d.%d.%d,%s", ID, 
     startUpTime, timeInterval, agent.IP[0], agent.IP[1], 
     agent.IP[2], agent.IP[3], cmdPort);
   printf("Final Buffer : %s", buffer);
