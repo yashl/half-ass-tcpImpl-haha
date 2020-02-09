@@ -11,11 +11,12 @@ public class Manager
 	static class BEACON
 	{
 		int id, startUpTime, timeInterval, cmdPort, last;
+		boolean alive;
 		String ip;
 
 		public BEACON() {}
 
-		public BEACON(int a, int b, int c, String z, int d, int e)
+		public BEACON(int a, int b, int c, String z, int d, int e, boolean f)
 		{
 			id = a;
 			startUpTime = b;
@@ -23,6 +24,7 @@ public class Manager
 			ip = z;
 			cmdPort = d;
 			last = e;
+			alive = f;
 		}
 
 		public int getBeaconID()
@@ -38,6 +40,16 @@ public class Manager
 		public int getlast()
 		{
 			return last;
+		}
+
+		public void setAlive(boolean bool)
+		{
+			alive = bool;
+		}
+
+		public boolean isAlive()
+		{
+			return alive;
 		}
 	}
 
@@ -90,15 +102,36 @@ public class Manager
 			int i = 0;
 			for(;;)
 			{
-				if(list.size() > i)
+				try
 				{
-					i++;
-					System.out.println("New Beacon Detected!");
+					Thread.sleep(1000);
 				}
+				catch(Exception e) { }
+				contains();
 			}
-			
 		}
 
+		public void contains()
+		{
+			BEACON[] array = list.toArray(new BEACON[0]);
+			
+			int found = 0;
+			for(BEACON i : array)
+			{
+				int currentTime = (int)System.currentTimeMillis()/1000;
+				int cond = (currentTime - i.last) * 2;
+				if(cond > 8  && i.isAlive())
+				{
+					System.out.println(i.id + ": agent Died!");
+					i.setAlive(false);
+				}
+				if(cond < 8 && !i.isAlive())
+				{
+					System.out.println(i.id + ": agent resurrected!");
+					i.setAlive(true);
+				}
+			}
+		}
 	}
 
 	static class BeaconListner extends Thread
@@ -131,8 +164,10 @@ public class Manager
 			}
 
 			if(found == 0)
+			{
 				list.add(b);
-
+				System.out.println(b.id + ": new agent detected!");
+			}
 		}
 
 		public BEACON createData()
@@ -145,9 +180,7 @@ public class Manager
 			int cmdPort = Integer.parseInt(beacon_s[4].trim());
 			int last = (int)System.currentTimeMillis()/1000;
 
-			System.out.println("Last Received: " + last);
-
-			BEACON b = new BEACON(id,startTime,timeInterval,beacon_s[3],cmdPort,last);
+			BEACON b = new BEACON(id,startTime,timeInterval,beacon_s[3],cmdPort,last, true);
 			return b;
 		}
 	}
