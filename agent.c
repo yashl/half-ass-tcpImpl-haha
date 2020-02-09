@@ -26,6 +26,7 @@ BEACON constructBeacon();
 int getCurTime();
 char* getCurIP();
 void sendUDP(BEACON agent);
+char* prepareBeacon(BEACON agent);
 
 int main(int argc, char *argv[])
 {
@@ -33,9 +34,14 @@ int main(int argc, char *argv[])
 
   BEACON agent = constructBeacon();
   
-  sendUDP(agent); //start UDP side
+  while(1)
+  {
+    sendUDP(agent);
+    printf("Agent Sent!\n");
+    sleep(agent.timeInterval);
+  }
+  printf("Agent Killed!\n");
 
-  
   return 0;
 }
 
@@ -43,7 +49,6 @@ void sendUDP(BEACON agent)
 {
   int sockfd;
   char buffer[1024];
-  char *hello = "asdajd";
   struct sockaddr_in servaddr;
 
   if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) 
@@ -58,24 +63,53 @@ void sendUDP(BEACON agent)
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+  
+  int bytes_sent  = 0;
+  char *temp = prepareBeacon(agent);
+  bytes_sent = send(sockfd, (char *)temp, 28, 0);
+  if(bytes_sent < 0) 
+    printf("Error!\n");
+  else
+    printf("Total Bytes sent = %d\n", bytes_sent);
 
-  send(sockfd, (const char *)hello, strlen(hello), 0);
-  //send(sockfd, (void *)agent, sizeof(agent), 0);  
-  printf("Packet Sent.\n");
   close(sockfd);
+}
+
+char* prepareBeacon(BEACON agent)
+{
+  char* buffer = new char[1024];
+  
+  char ID[6];
+  snprintf(ID, 6, "%d", agent.ID);
+  
+  char startUpTime[6];
+  snprintf(startUpTime, 6, "%d", agent.startUpTime);
+
+  char timeInterval[6];
+  snprintf(timeInterval, 6, "%d", agent.timeInterval);
+
+  char cmdPort[6];
+  snprintf(cmdPort, 6, "%d", agent.cmdPort);
+
+  snprintf(buffer, 1024, "%s,%s,%s,%d.%d.%d.%d,%s\n", ID, 
+    startUpTime, timeInterval, agent.IP[0], agent.IP[1], 
+    agent.IP[2], agent.IP[3], cmdPort);
+  printf("Final Buffer : %s", buffer);
+  return buffer;
 }
 
 BEACON constructBeacon()
 {
   BEACON agentB;
-  agentB.ID = (rand() % 9999) + 1; //ID number is randomized
-  printf("%d\n", agentB.ID);
+  agentB.ID = (rand() % 9999) + 1; 
+  printf("Agent ID: %d\n", agentB.ID);
   agentB.startUpTime = getCurTime();
-  agentB.timeInterval = 30; //harcoded to 30 seconds
+  printf("Current Time: %d\n", agentB.startUpTime);
+  agentB.timeInterval = 4; //harcoded to 30 seconds
   char* temp = getCurIP();
   sscanf(temp, "%d.%d.%d.%d\n", &agentB.IP[0], &agentB.IP[1], 
           &agentB.IP[2], &agentB.IP[3]);
-  agentB.cmdPort = (rand() % 8975) + 1024; //random number between 1024 and 9999
+  agentB.cmdPort = (rand() % 8975) + 1024; //between 1024 and 9999
   return agentB;
 }
 
@@ -88,7 +122,7 @@ int getCurTime()
   time_t t = time(NULL);
   struct tm timeinfo = *localtime(&t);
 
-  int cur_time = (timeinfo.tm_hour * 100) + timeinfo.tm_min;
+  int cur_time = (timeinfo.tm_min*100) + (timeinfo.tm_sec);
   return cur_time;
 }
 

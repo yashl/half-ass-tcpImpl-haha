@@ -1,17 +1,17 @@
 import java.net.*;
 import java.io.*;
+import java.nio.*;
+import java.util.*;
 
 public class Manager
 {
+	//BEACON Object
 	static class BEACON
 	{
 		int id, startUpTime, timeInterval, cmdPort;
 		char ip[];
 
-		public BEACON()
-		{
-			//default constructor
-		}
+		public BEACON() {}
 
 		public BEACON(int a, int b, int c, char z[], int d)
 		{
@@ -23,7 +23,7 @@ public class Manager
 		}
 	}
 
-
+	//Main method for the Manager class
 	public static void main(String args[])
 	{
 		try
@@ -49,31 +49,25 @@ public class Manager
 			ds.receive(incoming);
 			byte[] data = new byte[incoming.getLength()];
 			System.arraycopy(incoming.getData(), 0, data, 0, data.length);
-			DataProcessor processor = new DataProcessor(data);
+			BeaconListner processor = new BeaconListner(data);
 			processor.start();
 		}		
 	}
 
-	static class DataProcessor extends Thread
+	static class BeaconListner extends Thread
 	{
-		byte[] data;
+		String data;
 		
-		public DataProcessor() {}
+		public BeaconListner() {}
 
-		public DataProcessor(byte[] input)
+		public BeaconListner(byte[] input)
 		{
-			data = input;
+			data = new String(input);
 		}
 
 		public void run()
 		{
-			String s = new String(data);
-			System.out.println(s);
-		}
-
-		public void test()
-		{
-
+			System.out.println("Received buffer : " + data);
 		}
 	}
 }
