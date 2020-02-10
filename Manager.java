@@ -88,6 +88,39 @@ public class Manager
 		}		
 	}
 
+	static class CmdAgent extends Thread
+	{
+		BEACON b;
+		public CmdAgent(BEACON input) 
+		{
+			b = input;
+		}
+
+		public void run()
+		{
+			try
+			{
+				createSocket();
+			}
+			catch(Exception e) {}
+		}
+
+		public void createSocket() throws Exception
+		{
+			System.out.println(b.id + ": Local Time is: " + b.startUpTime);
+			System.out.println(b.id + ": Local OS is: MACOSX");
+
+			Socket clientSocket = new Socket("127.0.0.1", b.cmdPort);
+			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+
+			String s = "Sending from Java";
+			byte[] bytes = s.getBytes();			
+			outToServer.write(bytes, 0, bytes.length);
+			outToServer.flush();
+		}
+
+	}
+
 	static class AgentMonitor extends Thread
 	{
 		ArrayBlockingQueue<BEACON> list;
@@ -167,6 +200,8 @@ public class Manager
 			{
 				list.add(b);
 				System.out.println(b.id + ": new agent detected!");
+				CmdAgent commander = new CmdAgent(b);
+				commander.start();
 			}
 		}
 
@@ -180,7 +215,7 @@ public class Manager
 			int cmdPort = Integer.parseInt(beacon_s[4].trim());
 			int last = (int)System.currentTimeMillis()/1000;
 
-			BEACON b = new BEACON(id,startTime,timeInterval,beacon_s[3],cmdPort,last, true);
+			BEACON b = new BEACON(id,startTime,timeInterval,beacon_s[3].trim(),cmdPort,last, true);
 			return b;
 		}
 	}
