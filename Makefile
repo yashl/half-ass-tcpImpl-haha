@@ -1,5 +1,5 @@
 agent: agent.c
-	g++ agent.c -o agent
+	g++ agent.c -pthread -o agent
 
 clean:
 	rm -f agent

@@ -109,12 +109,13 @@ public class Manager
 		{
 			System.out.println(b.id + ": Local Time is: " + b.startUpTime);
 			System.out.println(b.id + ": Local OS is: MACOSX");
-
 			Socket clientSocket = new Socket("127.0.0.1", b.cmdPort);
+			System.out.println("TCP Connection Made!");
 			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 
 			String s = "Sending from Java";
-			byte[] bytes = s.getBytes();			
+			byte[] bytes = s.getBytes();
+
 			outToServer.write(bytes, 0, bytes.length);
 			outToServer.flush();
 		}

@@ -32,7 +32,7 @@ void sendUDP(BEACON agent);
 char* prepareBeacon(BEACON agent);
 
 BEACON agent;
-int agentCmdPort;
+unsigned int agentCmdPort;
 pthread_t ptid1, ptid2;
 
 static void *BeaconSender(void *params)
@@ -44,6 +44,29 @@ static void *BeaconSender(void *params)
     sleep(agent.timeInterval);
   }
   pthread_exit(NULL);
+}
+
+int receive_one_byte(int client_socket, char *cur_char)
+{    
+  ssize_t bytes_received = 0;
+  while (bytes_received != 1)
+  {
+    bytes_received = recv(client_socket, cur_char, 1, 0);
+  } 
+  return 1;
+}
+
+int receiveFully(int client_socket, char *buffer, int length)
+{
+  char *cur_char = buffer;
+  ssize_t bytes_received = 0;
+  while (bytes_received != length)
+  {    
+    receive_one_byte(client_socket, cur_char);
+    cur_char++;
+    bytes_received++;
+  }
+  return 1;
 }
 
 static void *CmdAgent(void *params)
@@ -70,35 +93,35 @@ static void *CmdAgent(void *params)
   // Binding newly created socket to given IP and verification 
   if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) 
   { 
-    printf("socket bind failed...\n"); 
+    printf("TCP Socket bind failed...\n"); 
   } 
   else
-    printf("Socket successfully binded..\n"); 
+    printf("TCP Socket successfully binded..\n"); 
 
   pthread_create(&ptid1, NULL, BeaconSender, NULL);
 
   // Now server is ready to listen and verification 
   if ((listen(sockfd, 5)) != 0) 
   { 
-    printf("Listen failed...\n"); 
+    printf("TCP Listen failed...\n"); 
   } 
   else
-    printf("Server listening..\n"); 
+    printf("TCP Server listening..\n"); 
 
   // Accept the data packet from client and verification 
   connfd = accept(sockfd, (SA*)&cli, &len); 
   if (connfd < 0) 
   { 
-    printf("server acccept failed...\n");  
+    printf("TCP Server acccept failed...\n");  
   } 
   else
-    printf("Accepted from Client\n");
+    printf("TCP Accepted from Client\n");
 
   //reading message from tcp
-  char buff[80];
-
+  char buff[20];
+  bzero(buff, 20);
   read(sockfd, buff, sizeof(buff));
-  
+  //printf("Message from TCP: %s\n", buff);
 
   pthread_join(ptid1, NULL);
   close(sockfd);
@@ -106,18 +129,19 @@ static void *CmdAgent(void *params)
 
 void GetLocalOS(char OS[16], int *valid)
 {
-
+  OS = "MACOSX";
+  //&valid = 1;
 }
 
 void GetLocalTime(int *time, int *valid)
 {
-
+  //&time = getCurTime();
 }
 
 int main(int argc, char *argv[])
 {
 
-  //srand(time(NULL));
+  srand(time(NULL));
   agent = constructBeacon();
   //agentCmdPort = agent.cmdPort;
 
